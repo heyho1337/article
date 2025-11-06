@@ -3,8 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\ArticleRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
@@ -35,24 +33,23 @@ class Article
 
     private static string $currentLang = 'en';
 
+    // JSON translation storage
+    #[ORM\Column(type: Types::JSON)]
     #[Groups(['article:read'])]
-    private ?string $name = null;
+    private array $name = [];
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_en = null;
-
+    #[ORM\Column(type: Types::JSON)]
     #[Groups(['article:read'])]
-    private ?string $text = null;
+    private array $text = [];
 
-     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $text_hu = null;
+    #[ORM\Column(type: Types::JSON)]
+    #[Groups(['article:read'])]
+    private array $title = [];
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $text_en = null;
+    #[ORM\Column(type: Types::JSON)]
+    private array $meta_desc = [];
 
+    // Standard columns
     #[ORM\Column]
     #[Groups(['article:read'])]
     private ?\DateTimeImmutable $created_at = null;
@@ -61,30 +58,16 @@ class Article
     #[Groups(['article:read'])]
     private ?\DateTimeImmutable $modified_at = null;
 
-    #[Groups(['article:read'])]
-    private ?string $title = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $title_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $title_en = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['article:read'])]
     private ?string $image = null;
 
-    private ?string $meta_desc = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $meta_desc_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $meta_desc_en = null;
-
     public function __construct()
     {
-        
+        $this->name = [];
+        $this->text = [];
+        $this->title = [];
+        $this->meta_desc = [];
     }
 
     public function getId(): ?int
@@ -92,75 +75,101 @@ class Article
         return $this->id;
     }
 
-    public function getName(): ?string
+    // Smart getters/setters
+    public function getName(?string $lang = null): ?string
+    {
+        $lang = $lang ?? self::$currentLang;
+        return $this->name[$lang] ?? $this->name['en'] ?? null;
+    }
+
+    public function setName(?string $value, ?string $lang = null): static
+    {
+        $lang = $lang ?? self::$currentLang;
+        $this->name[$lang] = $value;
+        return $this;
+    }
+
+    public function getText(?string $lang = null): ?string
+    {
+        $lang = $lang ?? self::$currentLang;
+        return $this->text[$lang] ?? $this->text['en'] ?? null;
+    }
+
+    public function setText(?string $value, ?string $lang = null): static
+    {
+        $lang = $lang ?? self::$currentLang;
+        $this->text[$lang] = $value;
+        return $this;
+    }
+
+    public function getTitle(?string $lang = null): ?string
+    {
+        $lang = $lang ?? self::$currentLang;
+        return $this->title[$lang] ?? $this->title['en'] ?? null;
+    }
+
+    public function setTitle(?string $value, ?string $lang = null): static
+    {
+        $lang = $lang ?? self::$currentLang;
+        $this->title[$lang] = $value;
+        return $this;
+    }
+
+    public function getMetaDesc(?string $lang = null): ?string
+    {
+        $lang = $lang ?? self::$currentLang;
+        return $this->meta_desc[$lang] ?? $this->meta_desc['en'] ?? null;
+    }
+
+    public function setMetaDesc(?string $value, ?string $lang = null): static
+    {
+        $lang = $lang ?? self::$currentLang;
+        $this->meta_desc[$lang] = $value;
+        return $this;
+    }
+
+    // Methods to get/set all translations
+    public function getNameTranslations(): array
     {
         return $this->name;
     }
 
-    public function setName(?string $name): static
+    public function setNameTranslations(array $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
-    public function getNameHu(): ?string
-    {
-        return $this->name_hu;
-    }
-
-    public function setNameHu(string $name_hu): static
-    {
-        $this->name_hu = $name_hu;
-
-        return $this;
-    }
-
-    public function getNameEn(): ?string
-    {
-        return $this->name_en;
-    }
-
-    public function setNameEn(?string $name_en): static
-    {
-        $this->name_en = $name_en;
-
-        return $this;
-    }
-
-    public function getText(): ?string
+    public function getTextTranslations(): array
     {
         return $this->text;
     }
 
-    public function setText(?string $text): static
+    public function setTextTranslations(array $text): static
     {
         $this->text = $text;
-
         return $this;
     }
 
-    public function getTextHu(): ?string
+    public function getTitleTranslations(): array
     {
-        return $this->text_hu;
+        return $this->title;
     }
 
-    public function setTextHu(string $text_hu): static
+    public function setTitleTranslations(array $title): static
     {
-        $this->text_hu = $text_hu;
-
+        $this->title = $title;
         return $this;
     }
 
-    public function getTextEn(): ?string
+    public function getMetaDescTranslations(): array
     {
-        return $this->text_en;
+        return $this->meta_desc;
     }
 
-    public function setTextEn(?string $text_en): static
+    public function setMetaDescTranslations(array $meta_desc): static
     {
-        $this->text_en = $text_en;
-
+        $this->meta_desc = $meta_desc;
         return $this;
     }
 
@@ -172,7 +181,6 @@ class Article
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
-
         return $this;
     }
 
@@ -184,43 +192,6 @@ class Article
     public function setModifiedAt(\DateTimeImmutable $modified_at): static
     {
         $this->modified_at = $modified_at;
-
-        return $this;
-    }
-
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-
-        return $this;
-    }
-
-    public function getTitleHu(): ?string
-    {
-        return $this->title_hu;
-    }
-
-    public function setTitleHu(string $title_hu): static
-    {
-        $this->title_hu = $title_hu;
-
-        return $this;
-    }
-
-    public function getTitleEn(): ?string
-    {
-        return $this->title_en;
-    }
-
-    public function setTitleEn(?string $title_en): static
-    {
-        $this->title_en = $title_en;
-
         return $this;
     }
 
@@ -232,7 +203,6 @@ class Article
     public function setImage(?string $image): static
     {
         $this->image = $image;
-
         return $this;
     }
 
@@ -241,49 +211,13 @@ class Article
         self::$currentLang = $lang;
     }
 
+    public static function getCurrentLang(): string
+    {
+        return self::$currentLang;
+    }
+
     public function __toString(): string
     {
-        $getter = 'getName' . self::$currentLang;
-        if (method_exists($this, $getter)) {
-            return (string) $this->$getter();
-        }
-
-        return '';
-    }
-
-    public function getMetaDesc(): ?string
-    {
-        return $this->meta_desc;
-    }
-
-    public function setMetaDesc(?string $meta_desc): static
-    {
-        $this->meta_desc = $meta_desc;
-
-        return $this;
-    }
-
-    public function getMetaDescHu(): ?string
-    {
-        return $this->meta_desc_hu;
-    }
-
-    public function setMetaDescHu(?string $meta_desc_hu): static
-    {
-        $this->meta_desc_hu = $meta_desc_hu;
-
-        return $this;
-    }
-
-    public function getMetaDescEn(): ?string
-    {
-        return $this->meta_desc_en;
-    }
-
-    public function setMetaDescEn(?string $meta_desc_en): static
-    {
-        $this->meta_desc_en = $meta_desc_en;
-
-        return $this;
+        return $this->getName() ?? '';
     }
 }
